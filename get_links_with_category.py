@@ -3,6 +3,8 @@ import json
 
 from bs4 import BeautifulSoup
 
+from retry_requests import retry
+
 
 
 catalog_url = 'https://yacht-parts.ru/catalog/'
@@ -10,7 +12,8 @@ headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/
 
 
 def get_all_categories_links():
-    r = requests.get(catalog_url, headers=headers)
+    session = retry()
+    r = session.get(catalog_url, headers=headers)
     print(r.status_code)
     soup = BeautifulSoup(r.content, 'html5lib')
 
@@ -28,14 +31,15 @@ def get_all_categories_links():
 
 def get_all_items_from_page(url, page_num):
     payload = {'PAGEN_1': str(page_num)}
-    r = requests.get(url, headers=headers, params=payload)
+    session = retry()
+    r = session.get(url, headers=headers, params=payload)
     print(r.status_code)
     if r.status_code != 200: 
         return []
     soup = BeautifulSoup(r.content, 'html5lib')
     items = soup.find_all('div', {'class' : 'item-title'})
     links = []
-    r = requests.get(catalog_url, headers=headers, params=payload)
+    r = session.get(catalog_url, headers=headers, params=payload)
 
     for link in items:
         links.append(link.find('a').get('href'))
